@@ -18,6 +18,7 @@ import time
 import pprint
 import json
 
+SEED = 0
 def glorot_uniform(n_inputs,n_outputs,multiplier=1.0):
     ''' Glorot uniform initialization '''
     glorot = multiplier*np.sqrt(6.0/(n_inputs+n_outputs))
@@ -91,7 +92,7 @@ def run_trial(env,agent,verbose=True, timesteps = 500):
     ''' an agent performs 3 episodes of the env '''
     totals = []
     for _ in range(3):
-        state, info = env.reset()
+        state, info = env.reset(seed = SEED)
         if verbose: env.render()
         total = 0
         done = False
@@ -100,12 +101,12 @@ def run_trial(env,agent,verbose=True, timesteps = 500):
         timestep = 0
         cum_reward = 0
         while not done:
-            print(timestep)
+            # print(timestep)
             
             # start_time = time.time()
             state, reward, terminated, truncated, _ = env.step(agent.act(state))
-            if timestep == 500: #Remove this
-                truncated = True
+            # if timestep == 500: #Remove this when run for real, dumb interrupt
+            #     truncated = True
             done = terminated or truncated
 
             # end_time = time.time()
@@ -137,7 +138,7 @@ def main():
     ''' main function '''
     # Setup environment
     env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
-    observation, info = env.reset(seed = 0)
+    observation, info = env.reset(seed = SEED)
 
     np.random.seed(0)
     
@@ -148,12 +149,12 @@ def main():
     multiplier = 5 # For weight initialization
 
     # Population params
-    pop_size = 4 #50 #50 different robots with different neural networks for brains
+    pop_size = 48 #50 #50 different robots with different neural networks for brains
     mutate_rate = .1
     softmax_temp = 5.0 #??? What is this
     
     # Training
-    n_generations = 3 #40
+    n_generations = 40 #40
     # Initiate all pop_size number of brains
     population = [Agent(n_inputs,n_hidden,n_actions,mutate_rate,multiplier) for i in range(pop_size)]
     

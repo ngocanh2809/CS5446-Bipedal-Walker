@@ -1,3 +1,4 @@
 gymnasium
 moviepy
 tqdm
+pygame
