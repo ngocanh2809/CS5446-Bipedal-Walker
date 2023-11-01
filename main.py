@@ -1,13 +1,14 @@
 import gymnasium as gym
 from pprint import pprint
 import moviepy
+
 def speed_yield(env):
     action = env.action_space.sample()
     # action[0], action[1] = random.randint(-1, 1), random.randint(-1, 1)
     return action
 
 def run(
-        harcore = False,
+        harcore = True,
         timesteps = 1000, 
         success_reward = 300, 
         max_time_steps_per_trial = 200, 
@@ -102,7 +103,7 @@ def run(
     return wins, success_rate, records
 
 if __name__ == '__main__':
-    wins, succ_rate, records = run(save_video=True)
+    wins, succ_rate, records = run(save_video=False)
 
     print('wins: ', wins)
     print('success_rates: ', succ_rate)
