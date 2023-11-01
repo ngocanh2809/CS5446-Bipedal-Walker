@@ -13,13 +13,17 @@ from ddpg_agent import Agent
 SEED = 0
 env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
 _, _ = env.reset(seed = SEED)
+
+outfolder = 'out/ddpg'
+os.makedirs(outfolder, exist_ok = True)
+env = gym.wrappers.RecordVideo(env, video_folder=outfolder, episode_trigger = lambda x: x % 100 == 0) #Saving every n = 1 episode
+
 agent = Agent(state_size=env.observation_space.shape[0], action_size=env.action_space.shape[0], random_seed=SEED)
 
-os.makedirs('out/ddpg', exist_ok = True)
-ACTOR_PATH = 'out/ddpg/checkpoint_actor.pth'
-CRITIC_PATH = 'out/ddpg/checkpoint_critic.pth'
+ACTOR_PATH = f'{outfolder}/checkpoint_actor.pth'
+CRITIC_PATH = f'{outfolder}/checkpoint_critic.pth'
 
-def ddpg(n_episodes=2000, max_t=700):
+def ddpg(n_episodes = 2000, max_t=700):
     scores_deque = deque(maxlen=100)
     scores = []
     max_score = -np.Inf
@@ -52,7 +56,7 @@ ax = fig.add_subplot(111)
 plt.plot(np.arange(1, len(scores)+1), scores)
 plt.ylabel('Score')
 plt.xlabel('Episode #')
-plt.savefig('out/ddpg/ddpg_train.png')  
+plt.savefig(f'{outfolder}/ddpg_train.png')  
 
 
 # agent.actor_local.load_state_dict(torch.load(ACTOR_PATH))
