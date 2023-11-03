@@ -1,3 +1,5 @@
+shimmy
+rl_zoo3
 gymnasium
 moviepy
 tqdm
