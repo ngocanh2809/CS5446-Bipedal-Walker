@@ -113,7 +113,7 @@ def run_trial(env,agent,verbose=True, timesteps = 500):
             # print('time_1-trial: ', end_time-start_time)
             if verbose: env.render()
             total += reward
-            if terminated or truncated:
+            if done:
                 break
 
             cum_reward += reward
