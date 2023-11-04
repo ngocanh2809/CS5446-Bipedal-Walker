@@ -5,6 +5,7 @@ Hyper params: ddpg_BipedalWalker-v3, these params were not automatically tuned
 import os
 import gymnasium as gym
 import numpy as np
+import torch
 # from callback_utils import VideoRecorderCallback
 
 from stable_baselines3 import DDPG
@@ -29,7 +30,7 @@ else:
     env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='human')#'human')
 
 _, _ = env.reset(seed = SEED)
-
+print(torch.cuda.is_available())
 #Build model
 model = DDPG("MlpPolicy", env, 
              verbose=1, 
@@ -40,7 +41,7 @@ model = DDPG("MlpPolicy", env,
              policy_kwargs=dict(net_arch=[400, 300]),
              learning_rate=0.001,  
              learning_starts=10000,             
-             tensorboard_log=f"./{outfolder}/tensorboard/")
+             tensorboard_log=f"./{outfolder}/tensorboard/", device="cuda")
 
 n_actions = env.action_space.shape[-1]
 param_noise = None

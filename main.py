@@ -103,7 +103,7 @@ def run(
     return wins, success_rate, records
 
 if __name__ == '__main__':
-    wins, succ_rate, records = run(save_video=False)
+    wins, succ_rate, records = run(harcore = False, save_video=False)
 
     print('wins: ', wins)
     print('success_rates: ', succ_rate)
