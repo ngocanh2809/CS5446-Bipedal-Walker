@@ -6,7 +6,7 @@
 """
 Created on Sat Aug 12 14:10:37 2017 and Oct 30 2023
 
-@author: bill and me (Nguyen Quoc Anh)
+@author: bill (and me)
 """
 import os
 import pickle
@@ -128,7 +128,7 @@ def next_generation(env,population,scores,temperature):
     ''' breeds a new generation of agents '''
     scores, population =  zip(*sorted(zip(scores,population),reverse=True)) #Sort population by score, descending
     children = list(population[:int(len(population)/4)]) #Keep 1/4* pop_size best agents
-    parents = list(np.random.choice(population,size=2*(len(population)-len(children)),p=softmax(scores,temperature))) #Choose randomly from 75% of the population
+    parents = list(np.random.choice(population,size=2*(len(population)-len(children)),p=softmax(scores,temperature))) #Choose randomly from 75% of the population, more weight to the ones with higher score
     children = children + [parents[i]+parents[i+1] for i in range(0,len(parents)-1,2)] #Populate the rest as the next generation
     scores = [run_trial(env,agent) for agent in children]
 
@@ -151,8 +151,8 @@ def main():
     # Population params
     pop_size = 48 #50 #50 different robots with different neural networks for brains
     mutate_rate = .1
-    softmax_temp = 5.0 #??? What is this
-    
+    softmax_temp = 5.0
+
     # Training
     n_generations = 40 #40
     # Initiate all pop_size number of brains
@@ -172,20 +172,23 @@ def main():
         
     # Get best weights that produce the best scores 
     best = [deepcopy(population[np.argmax(scores)])]
+    output_path = 'out/genetic_alg/evolved_nn'
+    weight_path = os.path.join(output_path, 'weight')
+
+    os.makedirs(output_path, exist_ok=True)
+    best[0].save_weight(os.path.join(weight_path, 'gen_0_' + str(round(max(scores), 2)) + '.pkl'))
     
     print('Breeding and mutating across generations:')
-    for generation in tqdm.tqdm(range(n_generations)):
+    for agent_index, generation in tqdm.tqdm(enumerate(n_generations)):
         population,scores = next_generation(env,population, scores,softmax_temp)
-        best.append(deepcopy(population[np.argmax(scores)]))
+        best_agent = deepcopy(population[np.argmax(scores)]) 
+        best_agent.save_weight(os.path.join(weight_path, 'gen_'+ str(agent_index) + '_' + str(round(max(scores), 2)) +'.pkl'))
+    
+        best.append(best_agent)
         print("Generation:",generation,"Score:",np.max(scores))
 
-    # Record every third trial of each best agent
-    output_path = 'out/genetic_alg/evolved_nn'
     for index, agent in enumerate(best):
-        agent_outpath = os.path.join(output_path, f'gen_{index}')
-        env = gym.wrappers.RecordVideo(env, video_folder=agent_outpath, episode_trigger = lambda x: x % 3 == 0) #Saving every n = 1 episode
         run_trial(env,agent)
-        agent.save_weight(os.path.join(agent_outpath, 'gen_' + str(index)+'.pkl'))
 
     env.close()
     
