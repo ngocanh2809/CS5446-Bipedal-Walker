@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 from bipedal_walker import MOTORS_TORQUE
 

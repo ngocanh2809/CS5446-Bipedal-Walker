@@ -15,7 +15,7 @@ from stable_baselines3.common.logger import configure
 
 
 SEED = 4260429117
-outfolder = 'out/ddpg/ez_lowerLR'
+outfolder = 'out/ddpg/ez_noidle_runfaster'
 os.makedirs(outfolder, exist_ok = True)
 
 #Build env
@@ -29,14 +29,14 @@ else:
     env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='human')#'human')
     eval_env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='human')#'human')
 
-_, _ = env.reset(seed = SEED)
-
 #Wrapping with modified reward environment
 wrappers = ['no_idle', 'run_faster']
 if 'no_idle' in wrappers:
     env = NoIdleWrapper(env=env)
 if 'run_faster' in wrappers:
     env = RunFasterWrapper(env=env)
+
+_, _ = env.reset(seed = SEED)
 
 #Build model
 model = DDPG("MlpPolicy", env, 
