@@ -1,3 +1,4 @@
+numpy
 shimmy
 rl_zoo3
 gymnasium
@@ -6,3 +7,5 @@ moviepy
 tqdm
 tensorboard
 pygame
+stable-baselines3
+matplotlib

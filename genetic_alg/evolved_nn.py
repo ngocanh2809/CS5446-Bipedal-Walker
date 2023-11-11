@@ -80,13 +80,16 @@ def load_evolved_Agent(
     with open(infile, 'rb') as pickle_file:
         loaded_data = pickle.load(pickle_file)
     
-    return Agent(
+    agent =  Agent(
         n_inputs=loaded_data['Layer 1'].shape[0],
         n_hidden=loaded_data['Layer 1'].shape[1],
         n_outputs=loaded_data['Layer 2'].shape[1],
         mutate_rate=mutate_rate,
         init_multiplier=init_multiplier
     )
+
+    agent.network = loaded_data
+    return agent
 
 def run_trial(env,agent,verbose=True, timesteps = 500):
     ''' an agent performs 3 episodes of the env '''
@@ -105,8 +108,6 @@ def run_trial(env,agent,verbose=True, timesteps = 500):
             
             # start_time = time.time()
             state, reward, terminated, truncated, _ = env.step(agent.act(state))
-            # if timestep == 500: #Remove this when run for real, dumb interrupt
-            #     truncated = True
             done = terminated or truncated
 
             # end_time = time.time()
@@ -137,7 +138,7 @@ def next_generation(env,population,scores,temperature):
 def main():
     ''' main function '''
     # Setup environment
-    env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
+    env = gym.make('BipedalWalker-v3', hardcore = True, render_mode='rgb_array')#'human')
     observation, info = env.reset(seed = SEED)
 
     np.random.seed(0)
@@ -154,7 +155,7 @@ def main():
     softmax_temp = 5.0
 
     # Training
-    n_generations = 40 #40
+    n_generations = 60 #40 for non-hardcore
     # Initiate all pop_size number of brains
     population = [Agent(n_inputs,n_hidden,n_actions,mutate_rate,multiplier) for i in range(pop_size)]
     
@@ -173,16 +174,16 @@ def main():
     # Get best weights that produce the best scores 
     best = [deepcopy(population[np.argmax(scores)])]
     output_path = 'out/genetic_alg/evolved_nn'
-    weight_path = os.path.join(output_path, 'weight')
+    weight_path = os.path.join(output_path, 'weight_hardcore')
 
-    os.makedirs(output_path, exist_ok=True)
+    os.makedirs(weight_path, exist_ok=True)
     best[0].save_weight(os.path.join(weight_path, 'gen_0_' + str(round(max(scores), 2)) + '.pkl'))
     
     print('Breeding and mutating across generations:')
-    for agent_index, generation in tqdm.tqdm(enumerate(n_generations)):
+    for generation in tqdm.tqdm(range(n_generations)):
         population,scores = next_generation(env,population, scores,softmax_temp)
         best_agent = deepcopy(population[np.argmax(scores)]) 
-        best_agent.save_weight(os.path.join(weight_path, 'gen_'+ str(agent_index) + '_' + str(round(max(scores), 2)) +'.pkl'))
+        best_agent.save_weight(os.path.join(weight_path, 'gen_'+ str(generation) + '_' + str(round(max(scores), 2)) +'.pkl'))
     
         best.append(best_agent)
         print("Generation:",generation,"Score:",np.max(scores))

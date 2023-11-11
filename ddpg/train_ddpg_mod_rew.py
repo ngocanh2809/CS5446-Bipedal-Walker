@@ -5,8 +5,8 @@ Hyper params: ddpg_BipedalWalker-v3, these params were not automatically tuned
 import os
 import gymnasium as gym
 import numpy as np
-# from callback_utils import VideoRecorderCallback
 
+from mod_reward import RunFasterWrapper, NoIdleWrapper
 from stable_baselines3 import DDPG
 from stable_baselines3.common.results_plotter import plot_results
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
@@ -30,6 +30,13 @@ else:
     eval_env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='human')#'human')
 
 _, _ = env.reset(seed = SEED)
+
+#Wrapping with modified reward environment
+wrappers = ['no_idle', 'run_faster']
+if 'no_idle' in wrappers:
+    env = NoIdleWrapper(env=env)
+if 'run_faster' in wrappers:
+    env = RunFasterWrapper(env=env)
 
 #Build model
 model = DDPG("MlpPolicy", env, 
@@ -62,7 +69,7 @@ checkpoint_callback = CheckpointCallback(save_freq=50000, save_path=f'{outfolder
 #10000
 
 #Train
-model.learn(total_timesteps=1000000, callback=[checkpoint_callback], progress_bar=True)
+model.learn(total_timesteps=1000000, callback=[eval_callback, checkpoint_callback], progress_bar=True)
 
 env.close()
 eval_env.close()
