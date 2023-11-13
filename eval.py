@@ -1,7 +1,7 @@
 from pprint import pprint
 import gymnasium as gym
 from stable_baselines3 import DDPG
-from mod_reward import NoIdleWrapper, RunFasterWrapper
+from mod_reward import *
 
 SEED = 0
 
@@ -17,7 +17,7 @@ def run(
         n_trials = 1, 
         success_reward = 200, 
         save_video = False,  
-        wrappers = ["no_idle", 'run_faster']      
+        wrappers = ["no_idle", 'run_faster', 'jump_higher', 'no_leg_contact']      
         ):
     #Keep track of success rate
     fails = 0
@@ -49,9 +49,13 @@ def run(
         env = NoIdleWrapper(env=env)
     if 'run_faster' in wrappers:
         env = RunFasterWrapper(env=env)
-
+    if 'jump_higher' in wrappers:
+        env = JumpHigherWrapper(env=env)
+    if 'no_leg_contact' in wrappers:
+        env = NoLeg0ContactWrapper(env=env)
+    
     env.action_space.seed(SEED)
-    observations, info = env.reset(seed = SEED)
+    observations1, info = env.reset(seed = SEED)
     states = None
     step = 0
     for episode in range(n_trials):
@@ -64,7 +68,7 @@ def run(
                 action = random_speed_yield(env=env) #Plug policy here
             elif alg in ['ddpg']:
                 action, states = model.predict(
-                    observations,  # type: ignore[arg-type]
+                    observations1,  # type: ignore[arg-type]
                     state=states,
                     deterministic=True,
                 )
@@ -130,7 +134,8 @@ def run(
 if __name__ == '__main__':
     wins, succ_rate, records = run(
         save_video=False,
-        weight_path='out/ddpg/ez_lowerLR/weights/model_250000_steps'
+        weight_path='out/ddpg/ez_lowerLR/best_weights/best_model_best',
+        wrappers = ["no_idle", 'no_leg_contact']      
         )
 
     print('wins: ', wins)

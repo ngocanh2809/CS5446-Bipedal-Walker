@@ -6,7 +6,7 @@ import os
 import gymnasium as gym
 import numpy as np
 
-from mod_reward import RunFasterWrapper, NoIdleWrapper
+from mod_reward import *
 from stable_baselines3 import DDPG
 from stable_baselines3.common.results_plotter import plot_results
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
@@ -31,10 +31,16 @@ else:
 
 #Wrapping with modified reward environment
 wrappers = ['no_idle', 'run_faster']
+
+#Wrapping with modified reward environment
 if 'no_idle' in wrappers:
     env = NoIdleWrapper(env=env)
 if 'run_faster' in wrappers:
     env = RunFasterWrapper(env=env)
+if 'jump_higher' in wrappers:
+    env = JumpHigherWrapper(env=env)
+if 'no_leg_contact' in wrappers:
+    env = NoLeg0ContactWrapper(env=env)
 
 _, _ = env.reset(seed = SEED)
 

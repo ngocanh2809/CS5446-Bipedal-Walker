@@ -782,7 +782,7 @@ class BipedalWalkerHardcore:
 
 if __name__ == "__main__":
     # Heurisic: suboptimal, have no notion of balance.
-    env = gym.make("BipedalWalker-v3", hardcore = True, render_mode="human")
+    env = gym.make("BipedalWalker-v3", hardcore = False, render_mode="human")
     env.reset()
     steps = 0
     total_reward = 0
@@ -803,7 +803,7 @@ if __name__ == "__main__":
             print("hull " + str([f"{x:+0.2f}" for x in s[0:4]]))
             print("leg0 " + str([f"{x:+0.2f}" for x in s[4:9]]))
             print("leg1 " + str([f"{x:+0.2f}" for x in s[9:14]]))
-            print('shaping', env.prev_shaping)
+            print('height', env.hull.position)
         steps += 1
 
         contact0 = s[8]
