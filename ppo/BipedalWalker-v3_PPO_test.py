@@ -177,7 +177,7 @@ class PPOAgent:
         # self.env = gym.make(env_name)
         self.action_size = self.env.action_space.shape[0]
         self.state_size = self.env.observation_space.shape
-        self.EPISODES = 20000 # total episodes to train through all environments
+        self.EPISODES = 40000 # total episodes to train through all environments
         self.episode = 0 # used to track the episodes total count of episodes played through all thread environments
         self.max_average = 0 # when average score is above 0 model will be saved
         self.lr = 0.00025
