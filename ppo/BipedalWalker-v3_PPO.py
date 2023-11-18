@@ -10,7 +10,7 @@
 #
 #================================================================
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0' # -1:cpu, 0:first gpu
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1' # -1:cpu, 0:first gpu
 import random
 import gym
 import pylab
@@ -29,6 +29,13 @@ from threading import Thread, Lock
 from multiprocessing import Process, Pipe
 import time
 
+import os
+import imageio
+import numpy as np
+from PIL import Image
+import PIL.ImageDraw as ImageDraw
+import matplotlib.pyplot as plt   
+
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if len(gpus) > 0:
     print(f'GPUs {gpus}')
@@ -38,7 +45,8 @@ if len(gpus) > 0:
 class Environment(Process):
     def __init__(self, env_idx, child_conn, env_name, state_size, action_size, visualize=False):
         super(Environment, self).__init__()
-        self.env = gym.make(env_name)
+        self.hardcore=False
+        self.env = gym.make(env_name, hardcore=self.hardcore)
         self.is_render = visualize
         self.env_idx = env_idx
         self.child_conn = child_conn
@@ -137,11 +145,13 @@ class PPOAgent:
     def __init__(self, env_name, model_name=""):
         # Initialization
         # Environment and PPO parameters
-        self.env_name = env_name       
-        self.env = gym.make(env_name)
+        self.env_name = env_name   
+        self.hardcore=False    
+        self.env = gym.make(env_name, hardcore = self.hardcore, render_mode='rgb_array')
+        self.env = gym.wrappers.RenderCollection(self.env, pop_frames = True, reset_clean = True)
         self.action_size = self.env.action_space.shape[0]
         self.state_size = self.env.observation_space.shape
-        self.EPISODES = 20000 # total episodes to train through all environments
+        self.EPISODES = 10000 # total episodes to train through all environments
         self.episode = 0 # used to track the episodes total count of episodes played through all thread environments
         self.max_average = 0 # when average score is above 0 model will be saved
         self.lr = 0.00025
@@ -160,9 +170,12 @@ class PPOAgent:
         # Create Actor-Critic network models
         self.Actor = Actor_Model(input_shape=self.state_size, action_space = self.action_size, lr=self.lr, optimizer = self.optimizer)
         self.Critic = Critic_Model(input_shape=self.state_size, action_space = self.action_size, lr=self.lr, optimizer = self.optimizer)
-        
-        self.Actor_name = f"{self.env_name}_PPO_Actor.h5"
-        self.Critic_name = f"{self.env_name}_PPO_Critic.h5"
+        if self.hardcore:
+            self.Actor_name = f"{self.env_name}_hardcore_PPO_Actor.h5"
+            self.Critic_name = f"{self.env_name}_hardcore_PPO_Critic.h5"
+        else:
+            self.Actor_name = f"{self.env_name}_PPO_Actor.h5"
+            self.Critic_name = f"{self.env_name}_PPO_Critic.h5"
         #self.load() # uncomment to continue training from old weights
 
         # do not change bellow
@@ -432,11 +445,48 @@ class PPOAgent:
                     print("episode: {}/{}, score: {}, average{}".format(e, test_episodes, score, average))
                     break
         self.env.close()
+    def visualize_iteration(self, num_iter):
+        self.load()
+        frames = []
+        for e in range(num_iter):
+            state = self.env.reset()
+            state = np.reshape(state[0], [1, self.state_size[0]])
+            done = False
+            score = 0
+            while not done:
+                # self.env.render()
+                frame = self.env.render()
+                frames.append(self._label_with_episode_number(frame[0], episode_num=e))
+                action = self.Actor.predict(state)[0]
+                state, reward, terminated, truncated , info = self.env.step(action)
+                done = truncated or terminated 
+                state = np.reshape(state, [1, self.state_size[0]])
+                score += reward
+                if done:
+                    average, SAVING = self.PlotModel(score, e, save=False)
+                    print("episode: {}/{}, score: {}, average{}".format(e, num_iter, score, average))
+                    break
+        self.env.close()
+        imageio.mimwrite(os.path.join('./videos/', 'ppo_policy.gif'), frames, fps=60)
+
+    def _label_with_episode_number(self, frame, episode_num):
+        im = Image.fromarray(frame)
+
+        drawer = ImageDraw.Draw(im)
+
+        if np.mean(im) < 128:
+            text_color = (255,255,255)
+        else:
+            text_color = (0,0,0)
+        drawer.text((im.size[0]/20,im.size[1]/18), f'Episode: {episode_num+1}', fill=text_color)
+
+        return im
 
 if __name__ == "__main__":
     # newest gym fixed bugs in 'BipedalWalker-v2' and now it's called 'BipedalWalker-v3'
     env_name = 'BipedalWalker-v3'
     agent = PPOAgent(env_name)
     # agent.run_batch() # train as PPO
-    agent.run_multiprocesses(num_worker = 10)  # train PPO multiprocessed (fastest)
+    agent.run_multiprocesses(num_worker = 12)  # train PPO multiprocessed (fastest)
     # agent.test()
+    # agent.visualize_iteration(1)

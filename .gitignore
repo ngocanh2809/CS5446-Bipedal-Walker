@@ -1,5 +1,12 @@
 out/*
 ppo/runs/*
+ppo-hardcore/
+ppo-hardcore-2/
+ppo-hardcore-lstm/
+ppo-hf/
+ppo-hf-hardcore/
+runs/
+archive/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
