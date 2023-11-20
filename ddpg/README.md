@@ -49,9 +49,9 @@ python ddpg/train_ddpg.py out/ddpg/test --hardcore --record
 ```
 python -m ddpg.train_ddpg_modreward path/to/outfolder --record --mod reward_modifier1 reward_modifier2 reward_modifier3
 ```
-Add tag --hardcore for hardcore and --record to save video
-Adding strings of reward wrapper string for the wrappers
-Has to be one, some or all of [no_idle, run_faster, jump_higher, no_leg_contact]
+Add tag --hardcore for hardcore and --record to save video \
+Adding strings of reward wrapper string for the wrappers \
+Has to be one, some or all of [no_idle, run_faster, jump_higher, no_leg_contact] \
 
 For example:
 ```
@@ -66,11 +66,12 @@ python ddpg/eval_ddpg.py path/to/model/excluding_.zip_postfix --mode viz --outpu
 ```
 python ddpg/eval_ddpg.py path/to/model/excluding_.zip_postfix --mode eval --output output/path
 ```
-Add tag --hardcore for hardcore and --record to save video
+Add tag --hardcore for hardcore and --record to save video 
 
 
 For example:
+```
 python ddpg/eval_ddpg.py out/ddpg/ez/weights/best_model --mode eval  --output out/ddpg/ez_lowerLR/best
-
+```
 
 6. For extra evaluation including more details and especially average speed, run eval.py   
