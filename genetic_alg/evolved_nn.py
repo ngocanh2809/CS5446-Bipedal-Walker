@@ -6,7 +6,7 @@
 """
 Created on Sat Aug 12 14:10:37 2017 and Oct 30 2023
 
-@author: bill and me (Nguyen Quoc Anh)
+@author: bill (and me)
 """
 import os
 import pickle
@@ -17,6 +17,7 @@ import tqdm
 import time
 import pprint
 import json
+import argparse
 
 SEED = 0
 def glorot_uniform(n_inputs,n_outputs,multiplier=1.0):
@@ -80,13 +81,16 @@ def load_evolved_Agent(
     with open(infile, 'rb') as pickle_file:
         loaded_data = pickle.load(pickle_file)
     
-    return Agent(
+    agent =  Agent(
         n_inputs=loaded_data['Layer 1'].shape[0],
         n_hidden=loaded_data['Layer 1'].shape[1],
         n_outputs=loaded_data['Layer 2'].shape[1],
         mutate_rate=mutate_rate,
         init_multiplier=init_multiplier
     )
+
+    agent.network = loaded_data
+    return agent
 
 def run_trial(env,agent,verbose=True, timesteps = 500):
     ''' an agent performs 3 episodes of the env '''
@@ -105,8 +109,6 @@ def run_trial(env,agent,verbose=True, timesteps = 500):
             
             # start_time = time.time()
             state, reward, terminated, truncated, _ = env.step(agent.act(state))
-            # if timestep == 500: #Remove this when run for real, dumb interrupt
-            #     truncated = True
             done = terminated or truncated
 
             # end_time = time.time()
@@ -128,16 +130,30 @@ def next_generation(env,population,scores,temperature):
     ''' breeds a new generation of agents '''
     scores, population =  zip(*sorted(zip(scores,population),reverse=True)) #Sort population by score, descending
     children = list(population[:int(len(population)/4)]) #Keep 1/4* pop_size best agents
-    parents = list(np.random.choice(population,size=2*(len(population)-len(children)),p=softmax(scores,temperature))) #Choose randomly from 75% of the population
+    parents = list(np.random.choice(population,size=2*(len(population)-len(children)),p=softmax(scores,temperature))) #Choose randomly from 75% of the population, more weight to the ones with higher score
     children = children + [parents[i]+parents[i+1] for i in range(0,len(parents)-1,2)] #Populate the rest as the next generation
     scores = [run_trial(env,agent) for agent in children]
 
     return children,scores
 
 def main():
+
+
+    parser = argparse.ArgumentParser(description="Draw graph of mean reward across generations ")
+    parser.add_argument("outfolder", default= 'out/genetic_alg/evolved_nn/weights', help="Path to the output weights folder.")
+    parser.add_argument("--hardcore", action="store_true", help="Hardcore level.")
+    parser.add_argument("--gen", default= 40, help="Number of generations")
+    parser.add_argument("--pop_size", default= 48, help="Population size each generation")
+
+    args = parser.parse_args()
+    print(args)
+    weight_path = args.outfolder
+    n_generations = args.gen
+    pop_size = args.pop_size
+
     ''' main function '''
     # Setup environment
-    env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
+    env = gym.make('BipedalWalker-v3', hardcore = args.hardcore, render_mode='rgb_array')#'human')
     observation, info = env.reset(seed = SEED)
 
     np.random.seed(0)
@@ -151,10 +167,10 @@ def main():
     # Population params
     pop_size = 48 #50 #50 different robots with different neural networks for brains
     mutate_rate = .1
-    softmax_temp = 5.0 #??? What is this
-    
+    softmax_temp = 5.0
+
     # Training
-    n_generations = 40 #40
+    n_generations = 60 #40 for non-hardcore
     # Initiate all pop_size number of brains
     population = [Agent(n_inputs,n_hidden,n_actions,mutate_rate,multiplier) for i in range(pop_size)]
     
@@ -172,38 +188,24 @@ def main():
         
     # Get best weights that produce the best scores 
     best = [deepcopy(population[np.argmax(scores)])]
+
+
+    os.makedirs(weight_path, exist_ok=True)
+    best[0].save_weight(os.path.join(weight_path, 'gen_0_' + str(round(max(scores), 2)) + '.pkl'))
     
     print('Breeding and mutating across generations:')
     for generation in tqdm.tqdm(range(n_generations)):
         population,scores = next_generation(env,population, scores,softmax_temp)
-        best.append(deepcopy(population[np.argmax(scores)]))
+        best_agent = deepcopy(population[np.argmax(scores)]) 
+        best_agent.save_weight(os.path.join(weight_path, 'gen_'+ str(generation) + '_' + str(round(max(scores), 2)) +'.pkl'))
+    
+        best.append(best_agent)
         print("Generation:",generation,"Score:",np.max(scores))
 
-    # Record every third trial of each best agent
-    output_path = 'out/genetic_alg/evolved_nn'
     for index, agent in enumerate(best):
-        agent_outpath = os.path.join(output_path, f'gen_{index}')
-        env = gym.wrappers.RecordVideo(env, video_folder=agent_outpath, episode_trigger = lambda x: x % 3 == 0) #Saving every n = 1 episode
         run_trial(env,agent)
-        agent.save_weight(os.path.join(agent_outpath, 'gen_' + str(index)+'.pkl'))
 
     env.close()
     
 if __name__ == '__main__':
     main()
-    # Setup environment
-    # env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
-    # observation, info = env.reset(seed = 0)
-
-    # np.random.seed(0)
-    
-    # # network params
-    # n_inputs = env.observation_space.shape[0]
-    # n_actions = env.action_space.shape[0]
-    # n_hidden = 512
-    # multiplier = 5 # For weight initialization
-
-    # agent = load_evolved_Agent('out/genetic_alg/evolved_nn/gen_2/gen_2.pkl')
-    # pprint.pprint(agent.network)
-
-    # env.close()
