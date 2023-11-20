@@ -2,6 +2,9 @@ from pprint import pprint
 import gymnasium as gym
 from stable_baselines3 import DDPG
 from mod_reward import *
+import os
+import statistics
+import json
 
 SEED = 0
 
@@ -14,7 +17,7 @@ def run(
         alg = 'ddpg',
         weight_path= 'out/ddpg/ez_lowerLR/best_weights/best_model', #without the .zip
         hardcore = False,
-        n_trials = 1, 
+        n_trials = 3, 
         success_reward = 200, 
         save_video = False,  
         wrappers = ["no_idle", 'run_faster', 'jump_higher', 'no_leg_contact']      
@@ -39,7 +42,7 @@ def run(
     if save_video:
         env = gym.make("BipedalWalker-v3", hardcore = hardcore, render_mode="rgb_array")
         #Record video    
-        env = gym.wrappers.RecordVideo(env, video_folder='out', name_prefix=trial_idx, episode_trigger = lambda x: x % 1 == 0) #Saving every n = 1 episode
+        env = gym.wrappers.RecordVideo(env, video_folder=os.path.dirname(weight_path), name_prefix=trial_idx, episode_trigger = lambda x: x % 1 == 0) #Saving every n = 1 episode
 
     else:
         env = gym.make("BipedalWalker-v3", hardcore = hardcore, render_mode="human")
@@ -55,7 +58,7 @@ def run(
         env = NoLeg0ContactWrapper(env=env)
     
     env.action_space.seed(SEED)
-    observations1, info = env.reset(seed = SEED)
+    observations, info = env.reset(seed = SEED)
     states = None
     step = 0
     for episode in range(n_trials):
@@ -68,7 +71,7 @@ def run(
                 action = random_speed_yield(env=env) #Plug policy here
             elif alg in ['ddpg']:
                 action, states = model.predict(
-                    observations1,  # type: ignore[arg-type]
+                    observations,  # type: ignore[arg-type]
                     state=states,
                     deterministic=True,
                 )
@@ -129,13 +132,40 @@ def run(
     
     success_rate = wins/(wins+ fails + 0.0000001)
 
+    records['avg'] = {
+        'mean_rewards': 0,
+        'stddev_rewards': 0,
+        'timesteps': 0,
+        'avg_speed': 0,
+        'reward_list': [],
+        'wins': wins,
+        'success_rate':success_rate,
+    }
+    print(records)
+    for index_key in sorted([int(x) for x in records.keys() if x != 'avg'])[:-1]:
+        print('Collecting:', index_key)
+        records['avg']['reward_list'].append(records[index_key]['acc_rewards'])
+        records['avg']['timesteps'] += records[index_key]['timesteps']
+        records['avg']['avg_speed'] += records[index_key]['avg_speed']
+
+    records['avg']['mean_rewards'] = sum(records['avg']['reward_list'])/len(records['avg']['reward_list'])
+    records['avg']['avg_speed'] = records['avg']['avg_speed']/ len(records['avg']['reward_list'])
+    records['avg']['timesteps'] = records['avg']['timesteps']/ len(records['avg']['reward_list'])
+    records['avg']['stddev_rewards'] = statistics.stdev(records['avg']['reward_list']) if len(records['avg']['reward_list']) > 1 else records['avg']['reward_list'][0]
+
+
+    with open(os.path.join(os.path.dirname(weight_path), 'metrics_eval.json'), 'w') as json_file:
+        json.dump(records, json_file, indent=4)
+    
     return wins, success_rate, records
 
 if __name__ == '__main__':
     wins, succ_rate, records = run(
         save_video=False,
-        weight_path='out/ddpg/ez_lowerLR/best_weights/best_model_best',
-        wrappers = ["no_idle", 'no_leg_contact']      
+        weight_path='out/ddpg/ez_lowerLR/best_weights/best_model',
+        wrappers = [], 
+        hardcore = False,  
+        n_trials = 3, 
         )
 
     print('wins: ', wins)

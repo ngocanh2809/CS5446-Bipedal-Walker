@@ -17,6 +17,7 @@ import tqdm
 import time
 import pprint
 import json
+import argparse
 
 SEED = 0
 def glorot_uniform(n_inputs,n_outputs,multiplier=1.0):
@@ -136,9 +137,23 @@ def next_generation(env,population,scores,temperature):
     return children,scores
 
 def main():
+
+
+    parser = argparse.ArgumentParser(description="Draw graph of mean reward across generations ")
+    parser.add_argument("outfolder", default= 'out/genetic_alg/evolved_nn/weights', help="Path to the output weights folder.")
+    parser.add_argument("--hardcore", action="store_true", help="Hardcore level.")
+    parser.add_argument("--gen", default= 40, help="Number of generations")
+    parser.add_argument("--pop_size", default= 48, help="Population size each generation")
+
+    args = parser.parse_args()
+    print(args)
+    weight_path = args.outfolder
+    n_generations = args.gen
+    pop_size = args.pop_size
+
     ''' main function '''
     # Setup environment
-    env = gym.make('BipedalWalker-v3', hardcore = True, render_mode='rgb_array')#'human')
+    env = gym.make('BipedalWalker-v3', hardcore = args.hardcore, render_mode='rgb_array')#'human')
     observation, info = env.reset(seed = SEED)
 
     np.random.seed(0)
@@ -173,8 +188,7 @@ def main():
         
     # Get best weights that produce the best scores 
     best = [deepcopy(population[np.argmax(scores)])]
-    output_path = 'out/genetic_alg/evolved_nn'
-    weight_path = os.path.join(output_path, 'weight_hardcore')
+
 
     os.makedirs(weight_path, exist_ok=True)
     best[0].save_weight(os.path.join(weight_path, 'gen_0_' + str(round(max(scores), 2)) + '.pkl'))
@@ -195,19 +209,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    # Setup environment
-    # env = gym.make('BipedalWalker-v3', render_mode='rgb_array')#'human')
-    # observation, info = env.reset(seed = 0)
-
-    # np.random.seed(0)
-    
-    # # network params
-    # n_inputs = env.observation_space.shape[0]
-    # n_actions = env.action_space.shape[0]
-    # n_hidden = 512
-    # multiplier = 5 # For weight initialization
-
-    # agent = load_evolved_Agent('out/genetic_alg/evolved_nn/gen_2/gen_2.pkl')
-    # pprint.pprint(agent.network)
-
-    # env.close()

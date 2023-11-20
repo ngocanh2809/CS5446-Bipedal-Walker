@@ -8,12 +8,11 @@ from statistics import stdev
 import gymnasium as gym
 import glob
 
-def run_trial4eval(env, agent, verbose = True, n_episodes = 3):
+def run_trial4eval(env, agent, n_episodes = 3):
     totals = []
 
     for _ in range(n_episodes):
         state, info = env.reset()
-        if verbose: env.render()
         total = 0
         done = False
         #while not done:
@@ -30,7 +29,6 @@ def run_trial4eval(env, agent, verbose = True, n_episodes = 3):
 
             # end_time = time.time()
             # print('time_1-trial: ', end_time-start_time)
-            if verbose: env.render()
             total += reward
             if done:
                 break
@@ -47,7 +45,7 @@ def run_trial4eval(env, agent, verbose = True, n_episodes = 3):
     print(f"Mean reward: {mean_reward}, Std reward: {std_reward}")
     
     eval_dict = {
-        'model': 'evolved_alg',
+        'model': 'evo_alg',
         'weight_path': weight_path,
         'mean_reward': mean_reward,
         'std_reward': std_reward,
@@ -56,7 +54,7 @@ def run_trial4eval(env, agent, verbose = True, n_episodes = 3):
 
     return eval_dict
 
-def eval_evoalg(weight_path, save_video, hardcore, output_path, n_episodes = 3, noviz_noshow = False):
+def eval_evoalg(weight_path, save_video, hardcore, output_path,  noviz_noshow = False):
     agent = load_evolved_Agent(weight_path)
 
     os.makedirs(output_path, exist_ok=True)
@@ -70,21 +68,15 @@ def eval_evoalg(weight_path, save_video, hardcore, output_path, n_episodes = 3, 
     else:
         env = gym.make("BipedalWalker-v3", hardcore = hardcore, render_mode="human")
     
-    eval_dict = run_trial4eval(env, agent, verbose=True)
+    eval_dict = run_trial4eval(env, agent)
 
     with open(os.path.join(output_path, 'metrics_eval.json'), 'w') as json_file:
         json.dump(eval_dict, json_file, indent=4)
     
     return eval_dict
 
-def mass_eval_evoalg(weight_dir, save_video, hardcore):
-    weight_paths = glob.glob(f'{weight_dir}/*/*.pkl', recursive=True)
-
 
 if __name__ == '__main__':
-       # Load a pre-trained policy (change the path to your model file)
-    weight_path = 'out/ddpg/ez/weights/best_model' #no .zip 
-
 
     parser = argparse.ArgumentParser(description="Process a folder.")
     parser.add_argument("weight_path", help="Path to the input weight.")
