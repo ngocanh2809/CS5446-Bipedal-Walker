@@ -162,7 +162,7 @@ def run(
 if __name__ == '__main__':
     wins, succ_rate, records = run(
         save_video=False,
-        weight_path='out/ddpg/ez_lowerLR/best_weights/best_model',
+        weight_path='out/ddpg/ez_noidle_runfaster/best_weights/best_model',
         wrappers = [], 
         hardcore = False,  
         n_trials = 3, 

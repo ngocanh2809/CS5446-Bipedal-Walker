@@ -5,22 +5,32 @@ Hyper params: ddpg_BipedalWalker-v3, these params were not automatically tuned
 import os
 import gymnasium as gym
 import numpy as np
+import argparse
 
 from mod_reward import *
 from stable_baselines3 import DDPG
-from stable_baselines3.common.results_plotter import plot_results
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from stable_baselines3.common.logger import configure
 
 
+parser = argparse.ArgumentParser(description="Train DDPG")
+parser.add_argument("outfolder", default= 'out/ddpg/test', help="Path to the output weights folder.")
+parser.add_argument("--hardcore", action="store_true", help="Hardcore level.")
+parser.add_argument("--record", action="store_true", help="Record video")
+parser.add_argument('--mod', nargs='+', default=['no_idle', 'run_faster'], type=str, help='Input list of modified reward wrappers, has to be a combination of no_idle, run_faster, jump_higher, no_leg_contact')
+
+args = parser.parse_args()
+print(args)
+outfolder = args.outfolder
+record = args.record
+hardcore = args.hardcore
+wrappers = args.mod
+
 SEED = 4260429117
-outfolder = 'out/ddpg/ez_noidle_runfaster'
 os.makedirs(outfolder, exist_ok = True)
 
-#Build env
-record = True
-hardcore = False
+
 if record:
     env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='rgb_array')#'human')
     env = gym.wrappers.RecordVideo(env, video_folder=f'{outfolder}/video', episode_trigger = lambda x: x % 50 == 0) #Saving every n = 1 episode
@@ -30,7 +40,7 @@ else:
     eval_env = gym.make('BipedalWalker-v3', hardcore = hardcore, render_mode='human')#'human')
 
 #Wrapping with modified reward environment
-wrappers = ['no_idle', 'run_faster']
+# wrappers = ['no_idle', 'run_faster']
 
 #Wrapping with modified reward environment
 if 'no_idle' in wrappers:

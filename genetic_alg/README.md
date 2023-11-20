@@ -1,4 +1,24 @@
-To install:
+# Go through the results:
+1. Download the runs result
+For bash user, run:
+```
+cd CS5446-Bipedal-Walker #Get to main directory
+mkdir out
+cd out
+gdown --id 1xl2oFmDEYVpjg3uLyluFIaZrTaiswbeV
+unzip genetic_alg.zip
+rm genetic_alg.zip
+```
+
+Or download and unzip the zip files in https://drive.google.com/drive/folders/15X8B8cZyZg4vUaSazgXQClFJZ5B5etzs
+
+In the out/genetic_alg/evolved_nn folder, there are 2 subfolders, weights_ez and weights_hardcore
+- weights_ez: algorithm trained on ez mode, on 40 generations, population size 48
+- weights_hardcore: algorithm trained on hardcore mode, on 60 generations, population size 48
+
+Inside there's a subfolder eval containing the metric_eval.json and png, containing the evaluation of the of the run. Also the video recordings of the inference of the last weight file.
+
+# Run the code:
 
 1. Install a torch version appropriate to your computer
 2. Install packages
