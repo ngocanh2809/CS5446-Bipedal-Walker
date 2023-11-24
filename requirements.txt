@@ -1,7 +1,11 @@
+numpy
 shimmy
 rl_zoo3
 gymnasium
 ufal.pybox2d #Do this or gymnasium will be bugged
 moviepy
 tqdm
+tensorboard
 pygame
+stable-baselines3
+matplotlib

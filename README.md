@@ -2,8 +2,8 @@
 
 ### Installation
 ```
-git clone 
-cd 
+git clone https://github.com/ngocanh2809/CS5446-Bipedal-Walker.git
+cd CS5446-Bipedal-Walker
 ```
 Install an appropriate version of pytorch, then run:
 ```
