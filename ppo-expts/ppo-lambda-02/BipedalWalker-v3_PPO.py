@@ -214,7 +214,7 @@ class PPOAgent:
         discounted_r /= (np.std(discounted_r) + 1e-8) # divide by standard deviation
         return discounted_r
 
-    def get_gaes(self, rewards, dones, values, next_values, gamma = 0.99, lamda = 0.90, normalize=True):
+    def get_gaes(self, rewards, dones, values, next_values, gamma = 0.99, lamda = 0.2, normalize=True):
         deltas = [r + gamma * (1 - d) * nv - v for r, d, nv, v in zip(rewards, dones, next_values, values)]
         deltas = np.stack(deltas)
         gaes = copy.deepcopy(deltas)
@@ -492,5 +492,5 @@ if __name__ == "__main__":
     agent = PPOAgent(env_name)
     # agent.run_batch() # train as PPO
     # agent.run_multiprocesses(num_worker = 12)  # train PPO multiprocessed (fastest)
-    # agent.test(20)
-    agent.visualize_iteration(1)
+    agent.test(20)
+    # agent.visualize_iteration(1)

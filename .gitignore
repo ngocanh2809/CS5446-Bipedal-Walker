@@ -7,6 +7,10 @@ ppo-hf/
 ppo-hf-hardcore/
 runs/
 archive/
+ppo-expts/*/runs/*
+ppo-expts/*/videos/*
+ppo-expts/*/expts/*
+ppo-expts/*/BipedalWalker-v3_PPO_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

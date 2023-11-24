@@ -29,6 +29,8 @@ from threading import Thread, Lock
 from multiprocessing import Process, Pipe
 import time
 
+from mod_reward import *
+
 import os
 import imageio
 import numpy as np
@@ -45,8 +47,9 @@ if len(gpus) > 0:
 class Environment(Process):
     def __init__(self, env_idx, child_conn, env_name, state_size, action_size, visualize=False):
         super(Environment, self).__init__()
-        self.hardcore=False
+        self.hardcore=True
         self.env = gym.make(env_name, hardcore=self.hardcore)
+        self.env = NoIdleWrapper(env=self.env)
         self.is_render = visualize
         self.env_idx = env_idx
         self.child_conn = child_conn
@@ -146,14 +149,15 @@ class PPOAgent:
         # Initialization
         # Environment and PPO parameters
         self.env_name = env_name   
-        self.hardcore=False    
+        self.hardcore=True    
         self.env = gym.make(env_name, hardcore = self.hardcore, render_mode='rgb_array')
+        self.env = NoIdleWrapper(env=self.env)
         self.env = gym.wrappers.RenderCollection(self.env, pop_frames = True, reset_clean = True)
         self.action_size = self.env.action_space.shape[0]
         self.state_size = self.env.observation_space.shape
         self.EPISODES = 10000 # total episodes to train through all environments
         self.episode = 0 # used to track the episodes total count of episodes played through all thread environments
-        self.max_average = 0 # when average score is above 0 model will be saved
+        self.max_average = -120 # when average score is above 0 model will be saved
         self.lr = 0.00025
         self.epochs = 10 # training epochs
         self.shuffle = True
@@ -492,5 +496,5 @@ if __name__ == "__main__":
     agent = PPOAgent(env_name)
     # agent.run_batch() # train as PPO
     # agent.run_multiprocesses(num_worker = 12)  # train PPO multiprocessed (fastest)
-    # agent.test(20)
-    agent.visualize_iteration(1)
+    agent.test(20)
+    # agent.visualize_iteration(1)

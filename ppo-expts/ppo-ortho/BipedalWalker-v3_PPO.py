@@ -79,9 +79,9 @@ class Actor_Model:
         X_input = Input(input_shape)
         self.action_space = action_space
         
-        X = Dense(512, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(X_input)
-        X = Dense(256, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(X)
-        X = Dense(64, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(X)
+        X = Dense(512, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(X_input)
+        X = Dense(256, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(X)
+        X = Dense(64, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(X)
         output = Dense(self.action_space, activation="tanh")(X)
 
         self.Actor = Model(inputs = X_input, outputs = output)
@@ -116,9 +116,9 @@ class Critic_Model:
         X_input = Input(input_shape)
         old_values = Input(shape=(1,))
 
-        V = Dense(512, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(X_input)
-        V = Dense(256, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(V)
-        V = Dense(64, activation="relu", kernel_initializer=tf.random_normal_initializer(stddev=0.01))(V)
+        V = Dense(512, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(X_input)
+        V = Dense(256, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(V)
+        V = Dense(64, activation="relu", kernel_initializer=tf.keras.initializers.Orthogonal())(V)
         value = Dense(1, activation=None)(V)
 
         self.Critic = Model(inputs=[X_input, old_values], outputs = value)
@@ -153,7 +153,7 @@ class PPOAgent:
         self.state_size = self.env.observation_space.shape
         self.EPISODES = 10000 # total episodes to train through all environments
         self.episode = 0 # used to track the episodes total count of episodes played through all thread environments
-        self.max_average = 0 # when average score is above 0 model will be saved
+        self.max_average = -100 # when average score is above 0 model will be saved
         self.lr = 0.00025
         self.epochs = 10 # training epochs
         self.shuffle = True
@@ -492,5 +492,5 @@ if __name__ == "__main__":
     agent = PPOAgent(env_name)
     # agent.run_batch() # train as PPO
     # agent.run_multiprocesses(num_worker = 12)  # train PPO multiprocessed (fastest)
-    # agent.test(20)
-    agent.visualize_iteration(1)
+    agent.test(20)
+    # agent.visualize_iteration(1)
