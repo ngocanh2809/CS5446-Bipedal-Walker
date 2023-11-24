@@ -64,6 +64,7 @@ class Environment(Process):
                 #self.env.render()
 
             state, reward, terminated, truncated , info = self.env.step(action)
+            reward = np.clip(reward, -5,5)
             done = truncated or terminated 
             state = np.reshape(state, [1, self.state_size])
 
@@ -492,5 +493,5 @@ if __name__ == "__main__":
     agent = PPOAgent(env_name)
     # agent.run_batch() # train as PPO
     # agent.run_multiprocesses(num_worker = 12)  # train PPO multiprocessed (fastest)
-    # agent.test(20)
-    agent.visualize_iteration(1)
+    agent.test(20)
+    # agent.visualize_iteration(1)
